@@ -17,6 +17,24 @@ class Simulation():
         self.num_rides = data[3]
         self.ride_bonus = data[4]
         self.steps = data[5]
+        self.riders = filter(lambda x: x.is_possible(), map(Riders,RideData(filepath).rides))
+        self.drivers = [Drivers() for i in range(int(self.fleet_size))]
+
+    def max_theoretical_score(self):
+        total_journey_points = reduce((lambda a , b: a + b), map(lambda r: r.calculate_distance(), self.riders))
+        total_bonus_points = len(self.riders) * int(self.ride_bonus)
+        return total_journey_points + total_bonus_points
+
+    def run_simulation(self):
+        for step in self.steps:
+            for driver in self.drivers:
+                if driver.available:
+                    driver.select_ride(self.riders)
+                driver.move()
+
+
+
+
 
 class RideData():
 
@@ -38,6 +56,7 @@ class Riders():
         self.end_coords = value_list[2:4]
         self.start_time = value_list[4]
         self.finish_time = value_list[5]
+        self.complete = False
 
     def is_possible(self):
         window = self.finish_time - self.start_time
@@ -57,8 +76,10 @@ class Riders():
 class Drivers():
 
     def __init__(self):
+        self.available = True
         self.coords = (0, 0)
         self.internal_steps = 0
+        self.destination_cood = None
 
     def get_position(self):
         return self.coords
@@ -84,43 +105,28 @@ class Drivers():
         start = rider.start_time
         return (start - distance) >= 0
 
+    def __repr__(self):
+        return "coords=" + "{0}".format(self.coords ) + " steps=" + str(self.internal_steps)
 
-sim_a = Simulation(INPUT_A)
-sim_b = Simulation(INPUT_B)
-sim_c = Simulation(INPUT_C)
-sim_d = Simulation(INPUT_D)
-sim_e = Simulation(INPUT_E)
+    def select_ride(self, riders):
+        pass
 
-rides_a = map(Riders,RideData(INPUT_A).rides)
-rides_b = map(Riders,RideData(INPUT_B).rides)
-rides_c = map(Riders,RideData(INPUT_C).rides)
-rides_d = map(Riders,RideData(INPUT_D).rides)
-rides_e = map(Riders,RideData(INPUT_E).rides)
+    def move(self):
+        if self.destination_cood:
+            # move coloum/row
+            drows = (self.coords[0] - self.destination_cood[0])
+            dcol = (self.coords[1] - self.destination_cood[1])
+            if not(drows == 0):
+                self.coords[0]
+            elif not(dcol == 0):
+                self.coords[1]
+            else:
+                # can drop / can pick
+        self.add_step()
 
-# make sure no rides are impossible.
-filter(lambda x: x.is_possible(), rides_a)
-filter(lambda x: x.is_possible(), rides_b)
-filter(lambda x: x.is_possible(), rides_c)
-filter(lambda x: x.is_possible(), rides_d)
-filter(lambda x: x.is_possible(), rides_e)
-
-
-
+all_sims = [Simulation(INPUT_A), Simulation(INPUT_B), Simulation(INPUT_C), Simulation(INPUT_D), Simulation(INPUT_E)]
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+for sim in all_sims:
+    print(sim.max_theoretical_score())
+    # print sim.drivers
